@@ -35,18 +35,19 @@ float startAngle = 0; //starting angle
 float totalAngle = 0; //total absolute angular displacement
 float previoustotalAngle = 0; //for the display printing
 int encoderOrTime = 1;
-Servo myServo;
+
 
 //Objects
 WiFiUDP Udp;
+Servo myServo;
 
 //Setup Function
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+//  while (!Serial) {
+//    ; // wait for serial port to connect. Needed for native USB port only
+//  }
   
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -88,7 +89,7 @@ void loop() {
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
   if (packetSize) {
-    if(encoderOrTime == 1){
+//    if(encoderOrTime == 1){
     // read the packet into packetBufffer
       Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
       String datReq(packetBuffer);
@@ -104,15 +105,17 @@ void loop() {
       temp.toCharArray(relyBuffer,UDP_TX_PACKET_MAX_SIZE);
       Udp.write(relyBuffer);
       Udp.endPacket();
-    }else{
-      Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-      float start = millis();
-      String temp2(start); 
-      temp2.toCharArray(relyBuffer,UDP_TX_PACKET_MAX_SIZE);
-      Udp.write(relyBuffer);
-      Udp.endPacket();
-    }
-    encoderOrTime *= -1;
+//    }else{
+//      Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+//      float start = millis();
+//      String temp2(start); 
+//      temp2.toCharArray(relyBuffer,UDP_TX_PACKET_MAX_SIZE);
+//      Udp.write(relyBuffer);
+//      Udp.endPacket();
+//    }
+    //encoderOrTime *= -1;
+  }else{
+    Serial.println("Outside Loop");
   }
 }
 

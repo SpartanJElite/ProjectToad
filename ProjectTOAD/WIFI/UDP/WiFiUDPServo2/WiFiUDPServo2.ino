@@ -1,3 +1,15 @@
+int A = 12;
+int B = 11;
+int I = 10;
+
+float countTick = 0;
+float countIndex = 0;
+float precTick = 0;
+float precIndex = 0;
+float tick = 0;
+float tickB = 0;
+float index = 0;
+
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
@@ -20,13 +32,18 @@ WiFiUDP Udp;
 Servo myServo;
 
 void setup() {
+
   //Initialize serial and wait for port to open:
-  Serial.begin(9600);
+  Serial.begin(115200);
 //  while (!Serial) {
 //    ; // wait for serial port to connect. Needed for native USB port only
 //  }
   
-  // check for the WiFi module:
+  pinMode(A, INPUT);
+  pinMode(B, INPUT);
+  pinMode(I, INPUT);
+
+// check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     // don't continue
@@ -56,6 +73,7 @@ void setup() {
   Udp.begin(localPort);
 
   myServo.attach(9);
+  
 
 }
 
@@ -67,7 +85,7 @@ void loop() {
   if (packetSize) {
     // read the packet into packetBufffer
     float start = millis();
-    if(encoderOrTime == 1) {
+//    if(encoderOrTime == 1) {
       Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
       String datReq(packetBuffer);
       Serial.println(datReq);
@@ -75,8 +93,49 @@ void loop() {
       memset(packetBuffer,0,UDP_TX_PACKET_MAX_SIZE);
       // send a reply, to the IP address and port that sent us the packet we received
       Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-      encoder = encoder + 0.01;
-      float start = millis();
+
+      tick = digitalRead(A);
+  tickB = digitalRead(B);
+  index = digitalRead(I);
+
+  
+  if(tick != precTick)
+  {
+    if(tick != tickB)
+    {
+      countTick = countTick + tick;
+      precTick = tick;
+    }
+    else
+    {
+      countTick = countTick - tick;
+      precTick = tick;
+    }
+    Serial.print("tick :");
+    Serial.println(countTick);
+  }
+  
+  if(index != precIndex)
+  {
+    if(countTick > 0)
+    {
+      countIndex = countIndex + index;
+      precIndex = index;
+    }
+    else
+    {
+      countIndex = countIndex - index;
+      precIndex = index;
+    }
+    countTick = 0;
+    Serial.print("turn :");
+    Serial.println(countIndex);
+    
+  }
+      
+//      encoder = encoderRead();
+  encoder = countTick;
+//      float start = millis();
       String temp(encoder);
       temp.toCharArray(relyBuffer,UDP_TX_PACKET_MAX_SIZE);
       Udp.write(relyBuffer);
@@ -84,22 +143,71 @@ void loop() {
       
 
       
-    } else {
-      Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
-      String datReq(packetBuffer);
-      Serial.println(datReq);
-      myServo.write(datReq.toFloat());
-      memset(packetBuffer,0,UDP_TX_PACKET_MAX_SIZE);
-      Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-      String temp2(start); 
-      temp2.toCharArray(relyBuffer,UDP_TX_PACKET_MAX_SIZE);
-      Udp.write(relyBuffer);
-      Udp.endPacket();
-  
-    }
-    encoderOrTime *= -1;
+//    } else {
+//      Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
+//      String datReq(packetBuffer);
+//      Serial.println(datReq);
+//      myServo.write(datReq.toFloat());
+//      memset(packetBuffer,0,UDP_TX_PACKET_MAX_SIZE);
+//      Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+//      String temp2(start); 
+//      temp2.toCharArray(relyBuffer,UDP_TX_PACKET_MAX_SIZE);
+//      Udp.write(relyBuffer);
+//      Udp.endPacket();
+//
+//    }
+//    encoderOrTime *= -1;
+
+
+  }else{
+    //Serial.println("Outside loop");
   }
 }
+
+
+float encoderRead(){
+  tick = digitalRead(A);
+  tickB = digitalRead(B);
+  index = digitalRead(I);
+
+  
+  if(tick != precTick)
+  {
+    if(tick != tickB)
+    {
+      countTick = countTick + tick;
+      precTick = tick;
+    }
+    else
+    {
+      countTick = countTick - tick;
+      precTick = tick;
+    }
+    Serial.print("tick :");
+    Serial.println(countTick);
+  }
+  
+  if(index != precIndex)
+  {
+    if(countTick > 0)
+    {
+      countIndex = countIndex + index;
+      precIndex = index;
+    }
+    else
+    {
+      countIndex = countIndex - index;
+      precIndex = index;
+    }
+    countTick = 0;
+    Serial.print("turn :");
+    Serial.println(countIndex);
+    
+  }
+  return countTick;
+  
+}
+
 
 
 void printWifiStatus() {
